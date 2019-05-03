@@ -1,6 +1,6 @@
 # spigo
 
-Go program to work with [scrapyd](https://github.com/scrapy/)
+Go program to work with [scrapyd](https://github.com/scrapy/scrapyd)
 
 Currently it's only possible to cancel all the jobs
 
