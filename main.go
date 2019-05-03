@@ -47,34 +47,32 @@ func logPanic(err error, msg string) {
 
 // cancelAll cancels all the running spiders
 func cancelAll() {
-	for {
-		// Init HTTP client
-		client := &http.Client{}
-		// Compose request
-		req, err := http.NewRequest("GET",
-			"http://localhost:6800/listjobs.json?project="+project, nil)
+	// Init HTTP client
+	client := &http.Client{}
+	// Compose request
+	req, err := http.NewRequest("GET",
+		"http://localhost:6800/listjobs.json?project="+project, nil)
+	logPanic(err, "Error constructing http request for scrapyd")
+	// Make HTTP request
+	res, err := client.Do(req)
+	// If there's an error, stop here
+	logPanic(err, "scrapyd error")
+	// Parse response from scrapyd
+	body, err := ioutil.ReadAll(res.Body)
+	logPanic(err, "Error parsing response from scrapyd")
+	// Init variable for storing the scrapy spider status
+	var t scrapyDStatus
+	// Store JSON result
+	json.Unmarshal(body, &t)
+	// For all running spiders
+	for _, s := range t.Running {
+		log.Println("CANCELLING " + s.ID)
+		// Make new request to scrapyd
+		req, err := http.NewRequest("POST",
+			`http://localhost:6800/cancel.json?project=`+project+`&job=`+s.ID, nil)
 		logPanic(err, "Error constructing http request for scrapyd")
-		// Make HTTP request
-		res, err := client.Do(req)
-		// If there's an error, stop here
-		logPanic(err, "scrapyd error")
-		// Parse response from scrapyd
-		body, err := ioutil.ReadAll(res.Body)
-		logPanic(err, "Error parsing response from scrapyd")
-		// Init variable for storing the scrapy spider status
-		var t scrapyDStatus
-		// Store JSON result
-		json.Unmarshal(body, &t)
-		// For all running spiders
-		for _, s := range t.Running {
-			log.Println("CANCELLING " + s.ID)
-			// Make new request to scrapyd
-			req, err := http.NewRequest("POST",
-				`http://localhost:6800/cancel.json?project=`+project+`&job=`+s.ID, nil)
-			logPanic(err, "Error constructing http request for scrapyd")
-			res, err = client.Do(req)
-			logPanic(err, "Error from scrapyd response")
-		}
+		res, err = client.Do(req)
+		logPanic(err, "Error from scrapyd response")
 	}
 }
 
