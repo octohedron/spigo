@@ -12,7 +12,7 @@ import (
 // For storing the project
 var project = ""
 
-// Set up redis env
+// Set up environment
 func init() {
 	project = os.Getenv("crawl_project")
 }
